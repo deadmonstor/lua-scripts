@@ -1,10 +1,17 @@
-/* Not 100% mine. I just made it into one addon and made it work for gmod now */
 
-local devmode = false
+/* 
+	Not 100% mine. I just made it into one addon and made it work for gmod now as well as stopping his fuckery
+	Subject to change :P
+
+*/
+
+local devmode = false // Toggle only if something broke so that you can report it back to me
 local META_PLAYER = FindMetaTable("Player")
 
 if ( SERVER ) then
+
 	local networking = {}
+	
 	networking.Senders = {
 		[ TYPE_CONVAR ]				= function( _data )	ErrorNoHalt( "Networking:SenderError", "Can't write ConVar( 27 ) value!" ); end;
 		[ TYPE_COUNT ]				= function( _data )	ErrorNoHalt( "Networking:SenderError", "Can't write Amount of TYPE_* enums( 39 ) value!" ); end;
@@ -33,9 +40,8 @@ if ( SERVER ) then
 		[ TYPE_USERCMD ]			= function( _data )	ErrorNoHalt( "Networking:SenderError", "Can't write CUserCmd( 19 ) value!" ); end;
 		[ TYPE_USERMSG ]			= function( _data )	ErrorNoHalt( "Networking:SenderError", "Can't write TYPE_USERMSG( 26 ) value!" ); end;
 		[ TYPE_VIDEO ]				= function( _data )	ErrorNoHalt( "Networking:SenderError", "Can't write IVideoWriter( 33 ) value!" ); end;
-
 		[ TYPE_NIL ]				= function( _data )	ErrorNoHalt( "Networking:SenderError", "Can't write NIL( 0 ) value!" ); end;
-		-- [ TYPE_ANYTHING ]			= function( _data ) net.WriteTable( { _data } ); end;
+		
 		[ TYPE_BOOL ]				= function( _data )	net.WriteBool( _data ); end; // 1
 		[ TYPE_NUMBER ]				= function( _data )	net.WriteDouble( _data ); end; // 3
 		[ TYPE_STRING ]				= function( _data )	net.WriteString( _data ); end; // 4
@@ -47,8 +53,8 @@ if ( SERVER ) then
 		[ TYPE_COLOR ]				= function( _data )	net.WriteColor( _data ); end;
 	};
 
-	PENDING_USERMESSAGE = PENDING_USERMESSAGE || { };
-	util.AddNetworkString( "LUMessage" );
+	PENDING_USERMESSAGE = PENDING_USERMESSAGE or { };
+	util.AddNetworkString( "UMSG" );
 	util.AddNetworkString( "SendPlayerLua" );
 	util.AddNetworkString( "SendUserMessage" );
 
@@ -102,7 +108,7 @@ if ( SERVER ) then
 		PENDING_USERMESSAGE.active = true;
 		PENDING_USERMESSAGE.recipients = _players;
 
-		net.Start( "LUMessage" ); net.WriteString( _name );
+		net.Start( "UMSG" ); net.WriteString( _name );
 	end
 
 	function umsg.Angle( _ang )
@@ -114,7 +120,7 @@ if ( SERVER ) then
 	end
 
 	function umsg.Char( _char )
-		local _char = ( isstring( _char ) && string.char( _char ) || _char );
+		local _char = ( isstring( _char ) && string.char( _char ) or _char );
 		net.WriteInt( _char, 8 );
 	end
 	
@@ -154,7 +160,7 @@ if ( SERVER ) then
 	function umsg.End( )
 	
 		local _players = PENDING_USERMESSAGE.recipients;
-		if ( istable( _players ) || type( _players ) == "LRecipientFilter" ) then
+		if ( istable( _players ) or type( _players ) == "LRecipientFilter" ) then
 			if ( _players.GetRecipients ) then
 				PENDING_USERMESSAGE.recipients = _players:GetRecipients( );
 			else
@@ -169,12 +175,12 @@ if ( SERVER ) then
 		if ( !PENDING_USERMESSAGE.recipients ) then
 			net.Broadcast( );
 			if ( devmode ) then
-				print( "UMSG Broadcasting: " .. PENDING_USERMESSAGE.name );
+				print( ">>UMSG Broadcasting: " .. PENDING_USERMESSAGE.name );
 			end
 		else
 			net.Send( PENDING_USERMESSAGE.recipients );
 			if ( devmode ) then
-				print( "UMSG Sending: " .. PENDING_USERMESSAGE.name );
+				print( ">>UMSG Sending: " .. PENDING_USERMESSAGE.name );
 			end
 		end
 
@@ -199,7 +205,7 @@ else
 		if ( _id == -1 ) then
 			return NULL;
 		else
-			return Entity( _id ) || NULL;
+			return Entity( _id ) or NULL;
 		end
 	end
 
@@ -234,7 +240,7 @@ else
 		end
 	end
 
-	net.Receive( "LUmessage", function( _len )
+	net.Receive( "UMSG", function( _len )
 		local _name = net.ReadString( );
 
 		local _callback = usermessage.__hooks[ _name ];
@@ -259,6 +265,7 @@ else
 		elseif( _callback_other ) then
 			_callback_other( usermessage );
 		end
+		print( "Usermessage Received ".._name );
 	end );
 
 	net.Receive( "SendPlayerLua", function( _len )
@@ -266,25 +273,26 @@ else
 		if ( _data && _data != "" ) then
 			if ( devmode ) then
 				RunStringEx( _data, "" );
+				print( "LUA Received ".._data );
 			else
 				RunString( _data );
 			end
 		end
 	end );
 
-	usermessage.__hooks = usermessage.__hooks || { };
+	usermessage.__hooks = usermessage.__hooks or { };
 	function usermessage.Hook( _name, _callback )
 		if ( devmode ) then
-			print( "Adding UMSG Hook: ", _name );
+			print( "Adding NetUMSGReplacement Hook: ".. _name.." instead of here: " ..debug.getinfo(2).short_src );
 		end
 		usermessage.__hooks[ _name ] = _callback;
 	end
 
 	for _name, v in pairs( usermessage:GetTable( ) ) do
 		if ( devmode ) then
-			print( "Adding UMSG Hook: ", _name );
+			print( "Adding NetUMSGReplacement Hook: ".. _name.." instead of here: " ..debug.getinfo(2).short_src );
 		end
 		usermessage.Hook( _name, v.Function );
 	end
-	
 end
+
