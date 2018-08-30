@@ -112,16 +112,16 @@ if ( SERVER ) then
 	end
 
 	function umsg.Angle( _ang )
-		net.WriteAngle( _ang );
+		net.WriteAngle( _ang || Angle(0) );
 	end
 
 	function umsg.Bool( _bool )
-		net.WriteBool( _bool );
+		net.WriteBool( _bool || false );
 	end
 
 	function umsg.Char( _char )
 		local _char = ( isstring( _char ) && string.char( _char ) or _char );
-		net.WriteInt( _char, 8 );
+		net.WriteInt( _char || 0, 8 );
 	end
 	
 	function umsg.Entity( _ent )
@@ -130,31 +130,31 @@ if ( SERVER ) then
 		if ( _valid ) then
 			_id = _ent:EntIndex( );
 		end
-		net.WriteInt( _id, 16 );
+		net.WriteInt( _id || 0, 16 );
 	end
 
 	function umsg.Float( _float )
-		net.WriteFloat( _float );
+		net.WriteFloat( _float || 0 );
 	end
 
 	function umsg.Long( _long )
-		net.WriteInt( _long, 32 );
+		net.WriteInt( _long || 0, 32 );
 	end
 
 	function umsg.Short( _short )
-		net.WriteInt( _short, 16 );
+		net.WriteInt( _short || 0, 16 );
 	end
 
 	function umsg.String( _string )
-		net.WriteString( _string );
+		net.WriteString( _string || "" );
 	end
 
 	function umsg.Vector( _vector )
-		net.WriteVector( _vector );
+		net.WriteVector( _vector || Vector(0,0,0) );
 	end
 	
 	function umsg.VectorNormal( _vector )
-		net.WriteVector( _vector );
+		net.WriteVector( _vector || Vector(0,0,0));
 	end
 
 	function umsg.End( )
