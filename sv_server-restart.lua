@@ -45,6 +45,9 @@ timer.Create("_RESTART_", 30, 0, function()
 		timer.Simple(1.5, function()
 			RunConsoleCommand("say", "Server is restarting")
 		end)
+		timer.Simple(5, function()
+			RunConsoleCommand("_restart")
+		end)
 	end
 
 end)
