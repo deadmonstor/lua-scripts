@@ -1,4 +1,5 @@
 hook.Add("Think", "owo", function()
+	if !IsValid(LocalPlayer()) then return end
 	for k,v in pairs(player.GetAll()) do 
 		if (v and !v:Alive()) or v:SteamID() == "NULL" then 
 		
